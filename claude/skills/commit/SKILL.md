@@ -2,7 +2,7 @@
 name: commit
 description: Analyze all current changes (staged and unstaged) and split them into multiple logical git commits using Conventional Commits style. Use when committing work that spans multiple concerns.
 disable-model-invocation: true
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*)
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), mcp_gitkraken_git_add_or_commit, mcp_gitkraken_git_status, mcp_gitkraken_git_log_or_diff
 ---
 
 ## Current State
@@ -13,18 +13,76 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git
 - Unstaged changes: !`git diff`
 - Staged changes: !`git diff --cached`
 
+## Before staging
+
+Inspect every untracked file (`??` in status) before staging anything:
+- Is this a session artefact (handoff doc, plan, scratch note, test-plan)? **Do not commit it.**
+- Is this a build output, IDE file, or ignored file that slipped through? **Do not commit it.**
+- Only stage files that are intentional, reviewable changes to the codebase.
+
+If any untracked files are ambiguous, **list them and ask the user** before proceeding.
+
 ## Task
 
 Analyze every change (staged and unstaged) and commit them as **multiple logical units** — one commit per coherent concern. If all changes belong to a single concern, make one commit.
 
-Follow the conventions in [conventions/commit.md](../../../conventions/commit.md).
+Use **Conventional Commits** style without a scope in parentheses.
+
+### Format
+
+```
+type: short imperative summary
+
+Body explaining what changed and why. Wrap lines at 72 characters.
+```
+
+### Allowed types
+
+| type        | use for |
+|-------------|---------|
+| `feat:`     | new feature or capability |
+| `fix:`      | bug fix |
+| `test:`     | adding or updating tests |
+| `chore:`    | maintenance — configs, tooling, removing files |
+| `refactor:` | restructuring with no behaviour change |
+| `docs:`     | documentation only |
+| `style:`    | formatting, whitespace — no logic change |
+| `perf:`     | performance improvement |
+
+### Rules
+
+- Subject line: imperative mood ("add X", not "added X"), ≤72 chars, no trailing period, no scope in parentheses
+- Body: always required — explain the *what* and *why*, not the *how*; wrap at 72 chars
 
 ### Grouping strategy
 
 - Files that serve the same purpose belong in the same commit
 - Never mix types in one commit (a `feat:` and a `chore:` are separate)
-- Tests for a change can go in the same commit as the code, or a separate `test:` commit if the test suite is substantial
+- For **corrective** changes (bug fix, coverage gap, refactor): source and tests go in
+  the same commit — the fix is meaningless without the test proving it
+- For **additive** changes (new module, new feature, new method on an existing class):
+  source in a `feat:` commit first, tests in a follow-up `test:` commit — the
+  implementation should be reviewable independently of the test strategy
+- Exception: if the additive test suite is trivial (<~20 lines, one test function),
+  combining is acceptable
 - Config/tooling changes unrelated to the feature are their own `chore:` commit
+- Each commit must be independently reviewable and revertable — a reviewer should be able to understand and approve it without reading adjacent commits
+- If multiple files each target a different module or concern, split them one commit per module/concern regardless of file type (source, test, config)
+
+### Commit message quality
+
+Subject line (≤72 chars, imperative mood, no trailing period):
+- Describe **what** changed and **why** — not the task name, sprint, or phase number
+- Bad:  `test: close 18 missing coverage lines — phase 1`
+- Good: `test: cover AsyncSerialBackend import guard, close error, and flush timeout`
+- Append the Azure DevOps work item ID at the end of the subject when one exists:
+  `test: cover AsyncSerialBackend import guard AB#4521`
+- Never use planning-vocabulary in the subject: phase numbers, sprint names,
+  test-plan section labels (e.g. "phase 0", "p1", "phase 1 coverage")
+
+Body (optional, blank line after subject):
+- Explain the *reason* for the change if the subject alone is insufficient
+- List specific behaviours covered, decisions made, or alternatives rejected
 
 ### Execution
 
@@ -32,6 +90,10 @@ For each commit group in sequence:
 1. Stage only the files for this commit: `git add <file1> <file2> ...`
 2. Commit with the full message using a multiline format appropriate for the shell
 
-Do not ask for confirmation between commits. Execute all groups in a single response.
+Confirm the proposed grouping with the user **before executing** if:
+- Any untracked files (`??`) are being staged, OR
+- The grouping involves more than 5 commits
+
+Otherwise execute all groups in a single response without asking.
 
 Never add `Co-authored-by:` trailers or any AI attribution lines to commit messages.
