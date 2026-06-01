@@ -27,7 +27,7 @@ Multiple paragraphs are fine when needed.
 ## Rules
 
 - **Summary line**: imperative mood ("add X", not "added X"), ≤72 chars, no trailing period, no scope in parentheses
-- **Body**: always required — explain the *what* and *why*, not the *how*; wrap at 72 chars
+- **Body**: include whenever the subject alone doesn't explain *why* — which is most of the time. Wrap at 72 chars.
 
 ## Merge Commits
 
