@@ -1,16 +1,10 @@
 ---
 name: handoff
-description: Write or update a HANDOFF.md so the next agent (or a future you with fresh context) can resume this work without re-deriving the state. Invoke at end of session, before context compaction, or before handing off to another agent.
+description: Write or update a HANDOFF.md so the next agent or session can resume without re-deriving state. Use whenever the user says "wrap up", "I'm done for today", "save my progress", "write a summary", "before I go", or when context is approaching its limit.
+allowed-tools: Read, Glob, Write, Bash(git log:*), Bash(git status:*), Bash(git diff:*)
 ---
 
 Write or update a handoff document so the next agent with fresh context can continue this work.
-
-## When to invoke
-
-- The user asks to "wrap up", "write a handoff", or "summarise for next time"
-- Context is approaching the limit and work will continue in a new conversation
-- Work is pausing mid-task and resumes later (today, tomorrow, next sprint)
-- You are about to switch agents (Copilot ↔ Claude Code ↔ subagent)
 
 ## Target file
 
@@ -22,24 +16,36 @@ Write or update a handoff document so the next agent with fresh context can cont
    nearby `HANDOFF.md` / `HANDOFF2.md` files in other roots are usually local
    working notes, not duplicates to consolidate.
 
-## Process
+## Gather context first
 
-1. **Read the existing HANDOFF.md if it exists.** Preserve its structure and the
-   reader's mental model. Do not rewrite a doc that already works — amend it.
-2. If amending: add a dated **"Session Update — YYYY-MM-DD"** block at the top
-   summarising what changed this session, then update only the sections rendered
-   stale (typically *Next Steps*, *Repo State*, *Reference Files*).
-3. If creating: use the section list below.
-4. After writing, post a short summary in chat **and** end the reply with exactly:
-   ```
-   Resume with: <absolute path to HANDOFF.md>
-   ```
+Before writing anything, reconstruct what happened this session:
+
+- Run `git log --oneline -10` to see what was committed
+- Run `git status` and `git diff` for uncommitted work
+- Scan the conversation for decisions made, blockers hit, and explicit user instructions
+
+If git history is sparse or absent (no repo, nothing committed yet), fall back to scanning recently modified files with Glob and rely on the conversation history instead.
+
+This gives you the raw material — write from that, not from memory.
+
+## Amend or rewrite?
+
+- **Amend** if the existing handoff is recent and most sections are still accurate. Add a dated **"Session Update — YYYY-MM-DD"** block at the top summarising what changed, then update only the stale sections (typically *Next Steps*, *Repo State*, *Reference Files*).
+- **Rewrite** if the *Next Steps* are all completed and *Repo State* is more than a few commits behind — a full rewrite serves the reader better than a heavily patched document.
+- If creating fresh: use the section list below.
+
+If handing off to a different agent (not resuming yourself) — a subagent, Copilot → Claude Code, etc. — they have zero conversation history. Be more explicit in *Open Questions* and *Key Decisions* than you would for a personal session resume; they cannot infer intent from context you haven't written down.
+
+After writing, post a short summary in chat **and** end the reply with exactly:
+```
+Resume with: <relative path to HANDOFF.md from the project root>
+```
 
 ## Required sections (in order)
 
 | Section | Purpose |
 |---|---|
-| **Goal** | One paragraph. What the project is trying to accomplish. Stable across sessions. |
+| **Goal** | One paragraph. What the project is trying to accomplish. Stable across sessions *(update only when scope genuinely changes)*. |
 | **Repo State** | Branch, last commit SHA (and any merge SHA from this session), files touched, anything pushed. One block, scannable. |
 | **Current Progress** | Checklist. Preserve prior items verbatim; mark new ones. |
 | **Next Steps** | Ordered, actionable. Each item names the file or symbol to touch. No vague "continue work on X". |
