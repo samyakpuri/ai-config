@@ -59,6 +59,61 @@ function Link-Dir($path, $target) {
 
 Link-File "$claudeDir\CLAUDE.md" "$repo\global\CLAUDE.md"
 Link-Dir  "$claudeDir\rules"     "$repo\global\rules"
+Link-Dir  "$claudeDir\skills"    "$repo\skills"
+
+# Link plugins into the skills directory so Claude Code auto-loads them as <name>@skills-dir.
+# ~/.claude/skills is already symlinked to $repo\skills, so a junction here is enough.
+Link-Dir "$repo\skills\feature-dev" "$repo\plugins\feature-dev"
+
+# Also register in installed_plugins.json so VS Code Copilot can resolve agents from the plugin.
+function Register-LocalPlugin($name, $pluginPath) {
+    $jsonPath = "$claudeDir\plugins\installed_plugins.json"
+    $key = "$name@local"
+    $installed = Get-Content $jsonPath -Raw | ConvertFrom-Json -AsHashtable
+    if (-not $installed.ContainsKey('plugins')) { $installed['plugins'] = @{} }
+    if ($installed['plugins'].ContainsKey($key)) {
+        Write-Host "Plugin $key already registered"
+        return
+    }
+    $installed['plugins'][$key] = @(
+        @{
+            scope       = 'user'
+            installPath = $pluginPath
+            version     = 'unknown'
+            installedAt = (Get-Date -Format 'o' -AsUTC)
+            lastUpdated = (Get-Date -Format 'o' -AsUTC)
+        }
+    )
+    $installed | ConvertTo-Json -Depth 10 | Set-Content $jsonPath -Encoding UTF8
+    Write-Host "Registered $key in installed_plugins.json -> $pluginPath"
+}
+
+Register-LocalPlugin "feature-dev" "$repo\plugins\feature-dev"
+
+# Register local plugins in VS Code Copilot settings
+function Register-VSCodePlugin($pluginPath) {
+    $vscodePaths = @(
+        "$env:APPDATA\Code\User\settings.json",
+        "$env:APPDATA\Code - Insiders\User\settings.json"
+    )
+    foreach ($settingsPath in $vscodePaths) {
+        if (-not (Test-Path $settingsPath)) { continue }
+
+        $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json -AsHashtable
+        if (-not $settings.ContainsKey('chat.pluginLocations')) {
+            $settings['chat.pluginLocations'] = @{}
+        }
+        if (-not $settings['chat.pluginLocations'].ContainsKey($pluginPath)) {
+            $settings['chat.pluginLocations'][$pluginPath] = $true
+            $settings | ConvertTo-Json -Depth 10 | Set-Content $settingsPath -Encoding UTF8
+            Write-Host "Registered VS Code plugin -> $pluginPath ($(Split-Path $settingsPath -Leaf))"
+        } else {
+            Write-Host "VS Code plugin already registered -> $pluginPath"
+        }
+    }
+}
+
+Register-VSCodePlugin "$repo\plugins\feature-dev"
 
 Write-Host ""
 Write-Host "For Copilot in repos: run this script from the repo root with a .claude\ target"
