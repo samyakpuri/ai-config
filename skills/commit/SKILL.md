@@ -7,11 +7,13 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git
 
 ## Current State
 
-- Branch: !`git branch --show-current`
-- Status: !`git status --short`
-- Recent commits: !`git log --oneline -5`
-- Unstaged changes: !`git diff`
-- Staged changes: !`git diff --cached`
+Run these commands via Bash to gather state before proceeding:
+
+- `git branch --show-current`
+- `git status --short`
+- `git log --oneline -5`
+- `git diff`
+- `git diff --cached`
 
 ## Before staging
 
