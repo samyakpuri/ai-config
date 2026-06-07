@@ -1,0 +1,9 @@
+{
+  "name": "feature-dev",
+  "description": "Feature development and architecture agents — codebase exploration, architecture design, and quality review",
+  "version": "1.0.0",
+  "author": {
+    "name": "Samyak Puri",
+    "email": "samyakpuri@hotmail.com"
+  }
+}
