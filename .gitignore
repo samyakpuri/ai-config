@@ -1,2 +1,37 @@
-# Junction created by deploy.ps1 — not source, do not track
+# ── Junctions created by deploy.ps1 ──────────────────────────────────
+# Add one line per plugin junction as new plugins are added.
 skills/feature-dev
+
+# ── Claude Code local overrides ───────────────────────────────────────
+.claude/settings.local.json
+**/*.local.md
+
+# ── Session / planning artefacts ──────────────────────────────────────
+plan-*.md
+HANDOFF.md
+*.handoff.md
+
+# ── OS ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ── Editors ───────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Python ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Node ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Misc ──────────────────────────────────────────────────────────────
+*.tmp
+*.bak
