@@ -64,6 +64,7 @@ Link-Dir  "$claudeDir\skills"    "$repo\skills"
 # Link plugins into the skills directory so Claude Code auto-loads them as <name>@skills-dir.
 # ~/.claude/skills is already symlinked to $repo\skills, so a junction here is enough.
 Link-Dir "$repo\skills\feature-dev" "$repo\plugins\feature-dev"
+Link-Dir "$repo\skills\test-forge"  "$repo\plugins\test-forge"
 
 # Also register in installed_plugins.json so VS Code Copilot can resolve agents from the plugin.
 function Register-LocalPlugin($name, $pluginPath) {
@@ -89,6 +90,7 @@ function Register-LocalPlugin($name, $pluginPath) {
 }
 
 Register-LocalPlugin "feature-dev" "$repo\plugins\feature-dev"
+Register-LocalPlugin "test-forge"  "$repo\plugins\test-forge"
 
 # Register local plugins in VS Code Copilot settings
 function Register-VSCodePlugin($pluginPath) {
@@ -114,6 +116,7 @@ function Register-VSCodePlugin($pluginPath) {
 }
 
 Register-VSCodePlugin "$repo\plugins\feature-dev"
+Register-VSCodePlugin "$repo\plugins\test-forge"
 
 Write-Host ""
 Write-Host "For Copilot in repos: run this script from the repo root with a .claude\ target"
