@@ -3,12 +3,14 @@ $claudeDir = "$env:USERPROFILE\.claude"
 
 # Probe whether symlinks are available by attempting one in a temp location
 function Test-SymlinkSupport {
-    $tmp = Join-Path $env:TEMP "symlink-probe-$(New-Guid)"
+    $tempDir = (Get-Item $env:TEMP).FullName
+    $tmp = Join-Path $tempDir "symlink-probe-$(New-Guid)"
     try {
-        New-Item -ItemType SymbolicLink -Path $tmp -Target $env:TEMP -ErrorAction Stop | Out-Null
+        New-Item -ItemType SymbolicLink -Path $tmp -Target $tempDir -ErrorAction Stop | Out-Null
         Remove-Item $tmp -Force
         return $true
     } catch {
+        Write-Host "Symlink probe failed: $_" -ForegroundColor Yellow
         return $false
     }
 }
@@ -63,8 +65,9 @@ Link-Dir  "$claudeDir\skills"    "$repo\skills"
 
 # Link plugins into the skills directory so Claude Code auto-loads them as <name>@skills-dir.
 # ~/.claude/skills is already symlinked to $repo\skills, so a junction here is enough.
-Link-Dir "$repo\skills\feature-dev" "$repo\plugins\feature-dev"
-Link-Dir "$repo\skills\test-forge"  "$repo\plugins\test-forge"
+Link-Dir "$repo\skills\feature-dev"            "$repo\plugins\feature-dev"
+Link-Dir "$repo\skills\test-forge"             "$repo\plugins\test-forge"
+Link-Dir "$repo\skills\requirements-decompose" "$repo\plugins\requirements-decompose"
 
 # Also register in installed_plugins.json so VS Code Copilot can resolve agents from the plugin.
 function Register-LocalPlugin($name, $pluginPath) {
@@ -89,8 +92,9 @@ function Register-LocalPlugin($name, $pluginPath) {
     Write-Host "Registered $key in installed_plugins.json -> $pluginPath"
 }
 
-Register-LocalPlugin "feature-dev" "$repo\plugins\feature-dev"
-Register-LocalPlugin "test-forge"  "$repo\plugins\test-forge"
+Register-LocalPlugin "feature-dev"            "$repo\plugins\feature-dev"
+Register-LocalPlugin "test-forge"             "$repo\plugins\test-forge"
+Register-LocalPlugin "requirements-decompose" "$repo\plugins\requirements-decompose"
 
 # Register local plugins in VS Code Copilot settings
 function Register-VSCodePlugin($pluginPath) {
@@ -117,6 +121,7 @@ function Register-VSCodePlugin($pluginPath) {
 
 Register-VSCodePlugin "$repo\plugins\feature-dev"
 Register-VSCodePlugin "$repo\plugins\test-forge"
+Register-VSCodePlugin "$repo\plugins\requirements-decompose"
 
 function Register-McpServer($name, $command, $args) {
     claude mcp get $name 2>&1 | Out-Null
