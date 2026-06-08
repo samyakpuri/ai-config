@@ -75,6 +75,20 @@ Body explaining what changed and why. Wrap lines at 72 characters.
 - Each commit must be independently reviewable and revertable — a reviewer should be able to understand and approve it without reading adjacent commits
 - If multiple files each target a different module or concern, split them one commit per module/concern regardless of file type (source, test, config)
 
+### Commit plan
+
+When the diff touches **more than 10 files or more than 300 changed lines**, do not stage anything yet. Present the proposed grouping as a table and wait for approval:
+
+| # | type | files | proposed message |
+|---|------|-------|-----------------|
+| 1 | feat | `auth/login.py`, `auth/tokens.py` | add JWT authentication |
+| 2 | test | `tests/test_auth.py` | cover JWT auth flows |
+| 3 | chore | `requirements.txt` | add PyJWT dependency |
+
+The user can confirm, reorder rows, merge commits, reassign files, or rename messages. Only proceed to execution once the plan is approved. This replaces the generic confirmation gate for large changesets — the table gives enough detail to act on.
+
+For smaller changesets (≤10 files and ≤300 changed lines), proceed directly to execution.
+
 ### Commit message quality
 
 Subject line (≤72 chars, imperative mood, no trailing period):
@@ -99,7 +113,7 @@ For each commit group in sequence:
 
 Confirm the proposed grouping with the user **before executing** if:
 - Any untracked files (`??`) are being staged, OR
-- The grouping involves more than 5 commits
+- The grouping involves more than 5 commits (and the commit plan step above didn't already get approval)
 
 Otherwise execute all groups in a single response without asking.
 
