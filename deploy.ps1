@@ -118,5 +118,19 @@ function Register-VSCodePlugin($pluginPath) {
 Register-VSCodePlugin "$repo\plugins\feature-dev"
 Register-VSCodePlugin "$repo\plugins\test-forge"
 
+function Register-McpServer($name, $command, $args) {
+    claude mcp get $name 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "MCP $name — already registered"
+        return
+    }
+    $allArgs = @('mcp', 'add', '-s', 'user', $name) + @('--') + @($command) + $args
+    & claude @allArgs | Out-Null
+    Write-Host "MCP $name — registered"
+}
+
+Register-McpServer "markitdown" "uvx" @("markitdown-mcp")
+Register-McpServer "semble"     "uvx" @("--from", "semble[mcp]", "semble")
+
 Write-Host ""
 Write-Host "For Copilot in repos: run this script from the repo root with a .claude\ target"
