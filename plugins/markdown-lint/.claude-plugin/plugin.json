@@ -1,0 +1,9 @@
+{
+  "name": "markdown-lint",
+  "version": "0.1.0",
+  "description": "Automatically lints markdown files after write/edit and surfaces markdownlint suggestions. Works with or without a .markdownlint.json config.",
+  "author": {
+    "name": "Samyak Puri",
+    "email": "samyakpuri@hotmail.com"
+  }
+}
