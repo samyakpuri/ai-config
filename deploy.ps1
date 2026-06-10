@@ -68,6 +68,7 @@ Link-Dir  "$claudeDir\skills"    "$repo\skills"
 Link-Dir "$repo\skills\feature-dev"            "$repo\plugins\feature-dev"
 Link-Dir "$repo\skills\test-forge"             "$repo\plugins\test-forge"
 Link-Dir "$repo\skills\requirements-decompose" "$repo\plugins\requirements-decompose"
+Link-Dir "$repo\skills\markdown-lint"          "$repo\plugins\markdown-lint"
 
 # Also register in installed_plugins.json so VS Code Copilot can resolve agents from the plugin.
 function Register-LocalPlugin($name, $pluginPath) {
@@ -95,6 +96,7 @@ function Register-LocalPlugin($name, $pluginPath) {
 Register-LocalPlugin "feature-dev"            "$repo\plugins\feature-dev"
 Register-LocalPlugin "test-forge"             "$repo\plugins\test-forge"
 Register-LocalPlugin "requirements-decompose" "$repo\plugins\requirements-decompose"
+Register-LocalPlugin "markdown-lint"          "$repo\plugins\markdown-lint"
 
 # Register local plugins in VS Code Copilot settings
 function Register-VSCodePlugin($pluginPath) {
@@ -122,6 +124,7 @@ function Register-VSCodePlugin($pluginPath) {
 Register-VSCodePlugin "$repo\plugins\feature-dev"
 Register-VSCodePlugin "$repo\plugins\test-forge"
 Register-VSCodePlugin "$repo\plugins\requirements-decompose"
+Register-VSCodePlugin "$repo\plugins\markdown-lint"
 
 function Register-McpServer($name, $command, $args) {
     claude mcp get $name 2>&1 | Out-Null
