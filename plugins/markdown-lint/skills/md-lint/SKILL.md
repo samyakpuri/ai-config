@@ -4,15 +4,14 @@ description: >-
   This skill should be used when the user asks to "fix markdown lint errors", "fix markdownlint issues",
   "clean up this markdown", "lint this markdown file", "check markdown formatting", or "what's wrong with
   this markdown". Also activates automatically when the markdown-lint PostToolUse hook feeds lint violations
-  back after writing or editing a .md file. Provides specific, actionable fix suggestions for each
-  markdownlint rule violation without auto-applying changes.
-version: 0.1.0
+  back after writing or editing a .md file. Applies all fixes and loops until the file is clean.
+version: 0.2.0
 ---
 
 # Markdown Lint Skill
 
-Handles markdownlint violations for `.md` files. Always present fixes as suggestions — do not silently rewrite
-content without showing what changes and why.
+Handles markdownlint violations for `.md` files. Fix all violations in one pass, then re-run markdownlint
+to verify. Loop until clean or stuck.
 
 ## markdownlint Output Format
 
@@ -25,40 +24,46 @@ Format: `file:line[:col] RULE_ID/rule-name Description [details]`
 
 Parse each line to identify: which line is affected, which rule triggered, and what the violation is.
 
-## Suggesting Fixes
+## Fix Loop
 
-For each violation, surface:
-1. **Line number** and the offending content — read the file to retrieve the offending line before presenting a fix
-2. **What the rule requires** (one sentence)
-3. **The exact fix** — show the before/after diff or the corrected text
+1. Read the full violation list from the hook output.
+2. Apply **all** fixes in a single edit — do not fix one violation and wait.
+3. Re-run markdownlint on the file:
+   ```
+   npx --yes markdownlint-cli "<file_path>"
+   ```
+4. If violations remain, apply another round of fixes and re-run.
+5. Repeat until the file is clean (exit 0) or until the **same violations appear twice in a row** (stuck).
 
-Group violations by type when there are many of the same rule. Offer to apply all fixes of the same type at once.
+### When stuck
 
-Never auto-apply without stating what will change. Use phrasing like:
-- "Line 10 is missing a blank line before the heading — want me to add it?"
-- "5 lines have trailing spaces (lines 4, 7, 12, 18, 23) — fix all?"
-- "MD013: Lines 34 and 67 exceed the configured line length — here's how to wrap them."
+A violation is stuck if it persists unchanged after a fix attempt. For each stuck rule:
+
+1. **Explain why the auto-fix cannot resolve it** (e.g. ambiguous content, conflicting rules, intentional style).
+2. **Offer two options**:
+   - Apply a manual correction with user guidance
+   - Suppress the rule in `.markdownlint.json`:
+     ```json
+     { "MD060": false }
+     ```
+3. Do not loop further on stuck rules — suppress or skip them, then continue fixing the rest.
+
+## Applying Fixes
+
+Fix all violations of all rules in one `Edit` call per file where possible. When multiple rules affect the
+same lines, resolve them together. Do not make one edit per violation.
+
+Read the file once before editing to get current line content — line numbers in markdownlint output shift
+after edits, so resolve all changes against the original content.
 
 ## Configuration Awareness
 
 Check whether a `.markdownlint.json` (or `.jsonc`/`.yaml`/`.yml`) exists at the project root.
 
-- **Config present**: Rules and their settings come from the config. A rule disabled in config is not a violation even if the output shows it (the hook already passes the config to markdownlint, so the hook output is authoritative).
-- **No config**: markdownlint defaults apply. Common defaults to be aware of: MD013 line-length defaults to 80 chars, MD041 requires H1 as first line.
-
-If a user wants to suppress a rule permanently, suggest adding it to `.markdownlint.json`:
-```json
-{
-  "MD013": false
-}
-```
-
-Or to disable for a block inline:
-```markdown
-<!-- markdownlint-disable MD013 -->
-long line here
-<!-- markdownlint-enable MD013 -->
-```
+- **Config present**: Rules and their settings come from the config. The hook already passes the config to
+  markdownlint, so its output is authoritative.
+- **No config**: markdownlint defaults apply. Common defaults: MD013 line-length = 80, MD041 requires H1
+  as first line.
 
 ## Most Common Violations and Fixes
 
@@ -75,15 +80,15 @@ long line here
 | MD040 | Fenced code block missing language identifier |
 | MD041 | First line is not an H1 heading |
 | MD047 | File does not end with a single newline |
+| MD060 | Table column style inconsistency |
 
 For fix patterns, see `references/rules.md`.
 
 ## Inline Disable Comments
 
-When a violation is intentional (e.g. a long URL in MD013), suggest the narrowest disable scope:
+When a violation is intentional (e.g. a long URL in MD013), use the narrowest disable scope:
 
 ```markdown
 <!-- markdownlint-disable-next-line MD013 -->
 https://very-long-url-that-exceeds-line-length.example.com/path/to/resource
 ```
-
