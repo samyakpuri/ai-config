@@ -9,10 +9,14 @@ Write or update a handoff document so the next agent with fresh context can cont
 ## Target file
 
 1. **Use the folder the user names** (e.g. "in software folder" → `software/HANDOFF.md`).
-2. If no folder is named **and** the workspace has multiple roots, ask which folder
-   before writing. Do not guess.
-3. If a single-root workspace, use `<root>/HANDOFF.md`.
-4. **Never merge a HANDOFF across sibling folders** without explicit confirmation —
+2. If no folder is named, run `git rev-parse --show-toplevel` to find the git root of
+   the project actually being worked on. Use that as the target folder.
+3. If git returns multiple candidates (e.g. you are operating across multiple repos),
+   or if `git rev-parse` fails (no repo), ask the user which folder before writing.
+   Do not guess.
+4. **Never use the Claude Code primary working directory as a fallback** — it is often
+   a config or tooling repo, not the project the user is handing off.
+5. **Never merge a HANDOFF across sibling folders** without explicit confirmation —
    nearby `HANDOFF.md` / `HANDOFF2.md` files in other roots are usually local
    working notes, not duplicates to consolidate.
 
@@ -38,8 +42,12 @@ If handing off to a different agent (not resuming yourself) — a subagent, Copi
 
 After writing, post a short summary in chat **and** end the reply with exactly:
 ```
-Resume with: <relative path to HANDOFF.md from the project root>
+Resume with: <absolute path to the HANDOFF.md file you just wrote>
 ```
+
+The path in `Resume with:` **must be the exact absolute path passed to the Write tool** —
+copy it from the write operation, do not recompute it. This prevents the resume path from
+pointing to a different HANDOFF.md than the one that was written.
 
 ## Required sections (in order)
 
